@@ -1,0 +1,1 @@
+wget -O - https://raw.githubusercontent.com/ToPola0/proxmox-scripts/main/proxmox-dhcp.sh | bash
