@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Skrypt automatycznie konfiguruje Proxmox VE do używania DHCP na vmbr0
+# Skrypt automatycznie konfiguruje Proxmox VE do używania DHCP 
 # Uniwersalny z wyborem interfejsu sieciowego
 
 set -e
