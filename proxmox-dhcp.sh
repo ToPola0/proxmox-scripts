@@ -1,36 +1,45 @@
 #!/bin/bash
 
-echo "🔍 Szukanie aktywnego interfejsu sieciowego..."
-INTERFACE=$(ip -o -4 route show to default | awk '{print $5}')
+# Skrypt automatycznie konfiguruje Proxmox VE do używania DHCP na vmbr0
+# Wersja uniwersalna – bez ręcznych zmian
 
-if [ -z "$INTERFACE" ]; then
-    echo "❌ Nie znaleziono interfejsu sieciowego z bramą domyślną."
+set -e
+
+echo "[INFO] 🔍 Szukanie fizycznego interfejsu sieciowego..."
+
+# Ignorujemy interfejsy wirtualne i wewnętrzne
+PHY_IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -vE 'lo|vmbr|veth|tap|br-|docker' | head -n1)
+
+if [[ -z "$PHY_IFACE" ]]; then
+    echo "[❌ BŁĄD] Nie znaleziono fizycznego interfejsu sieciowego."
     exit 1
 fi
 
-echo "✅ Wykryto interfejs: $INTERFACE"
+echo "[✅] Wykryto interfejs: $PHY_IFACE"
 
-BACKUP_FILE="/etc/network/interfaces.bak.$(date +%Y%m%d%H%M%S)"
-echo "🛡️ Tworzenie kopii zapasowej: $BACKUP_FILE"
-cp /etc/network/interfaces "$BACKUP_FILE"
+# Backup pliku
+BACKUP="/etc/network/interfaces.bak.$(date +%Y%m%d%H%M%S)"
+echo "[💾] Tworzenie backupu: $BACKUP"
+cp /etc/network/interfaces "$BACKUP"
 
-echo "📝 Modyfikowanie pliku /etc/network/interfaces..."
+# Nowa konfiguracja interfaces
+echo "[🛠️] Tworzenie nowego pliku /etc/network/interfaces..."
 
-cat > /etc/network/interfaces <<EOF
+cat <<EOF > /etc/network/interfaces
 auto lo
 iface lo inet loopback
 
-auto $INTERFACE
-iface $INTERFACE inet dhcp
+auto vmbr0
+iface vmbr0 inet dhcp
+    bridge_ports $PHY_IFACE
+    bridge_stp off
+    bridge_fd 0
 EOF
 
-echo "✅ Zapisano nową konfigurację sieci (DHCP)"
+# Restart sieci
+echo "[♻️] Restartowanie sieci..."
+ifdown vmbr0 || true
+ifup vmbr0
 
-read -p "🔁 Zrestartować system teraz? (t/n): " confirm
-if [[ "$confirm" == "t" ]]; then
-    echo "♻️ Restartowanie systemu..."
-    reboot
-else
-    echo "ℹ️ Zmiany zostaną zastosowane po restarcie lub ręcznym restarcie interfejsu."
-    echo "Możesz też użyć: ifdown $INTERFACE && ifup $INTERFACE"
-fi
+echo "[✅ GOTOWE] vmbr0 skonfigurowany z DHCP na interfejsie $PHY_IFACE"
+echo "[🧯] W razie problemów przywróć backup: cp $BACKUP /etc/network/interfaces"
