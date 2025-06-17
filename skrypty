@@ -1,2 +1,9 @@
 wget -O - https://raw.githubusercontent.com/ToPola0/proxmox-scripts/main/proxmox-dhcp.sh | bash
 
+
+
+wget https://raw.githubusercontent.com/ToPola0/proxmox-scripts/main/proxmox-gdrive-backup.sh
+chmod +x proxmox-gdrive-backup.sh
+./proxmox-gdrive-backup.sh
+
+
