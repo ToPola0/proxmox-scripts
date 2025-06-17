@@ -52,9 +52,11 @@ function configure_gdrive() {
     echo "  Otwórz link w przeglądarce, zaloguj się, wklej kod do terminala"
     read -p "Naciśnij Enter, aby rozpocząć konfigurację..."
     if ! command -v rclone &>/dev/null; then
-        echo "[!] rclone nadal nie jest dostępny po instalacji. Sprawdź logi instalacji lub PATH."
+        echo "[!] rclone nadal nie jest dostępny po instalacji. Spróbuj uruchomić: apt update && apt install -y rclone"
         exit 3
     fi
+    which rclone
+    rclone version
     rclone config
 }
 
