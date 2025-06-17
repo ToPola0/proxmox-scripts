@@ -20,6 +20,10 @@ function install_rclone() {
         echo "[*] Instaluję rclone..."
         apt update && apt install -y rclone
         echo "[+] Zainstalowano rclone."
+        if ! command -v rclone &>/dev/null; then
+            echo "[!] Instalacja rclone nie powiodła się lub rclone nie jest w PATH!"
+            exit 2
+        fi
     else
         echo "[=] rclone już zainstalowany."
     fi
