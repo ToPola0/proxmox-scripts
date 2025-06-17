@@ -65,7 +65,7 @@ function configure_gdrive() {
     echo "  Otwórz link w przeglądarce, zaloguj się, wklej kod do terminala"
     read -p "Naciśnij Enter, aby rozpocząć konfigurację..."
 
-    set +e  # WYŁĄCZ automatyczne przerywanie na błędzie
+    set +e
     echo "========== DEBUG INFO =========="
     echo "[DEBUG] PATH: $PATH"
     echo "[DEBUG] whoami: $(whoami)"
@@ -77,6 +77,10 @@ function configure_gdrive() {
     ls -l /usr/bin/rclone 2>&1 || echo "Brak /usr/bin/rclone"
     echo "[DEBUG] ls -l /usr/local/bin/rclone:"
     ls -l /usr/local/bin/rclone 2>&1 || echo "Brak /usr/local/bin/rclone"
+    echo "[DEBUG] dpkg -l | grep rclone:"
+    dpkg -l | grep rclone || echo "rclone nie jest zainstalowany wg dpkg"
+    echo "[DEBUG] apt-cache policy rclone:"
+    apt-cache policy rclone
     echo "================================"
 
     if ! command -v rclone &>/dev/null; then
