@@ -41,6 +41,7 @@ function restore_backup() {
 }
 
 function configure_gdrive() {
+    install_rclone
     echo "=== Konfiguracja Google Drive ==="
     echo "Uruchomiona zostanie konfiguracja rclone. Wybierz kolejno:"
     echo "  n (nowy remote), nazwa: gdrive, typ: drive, domyślne opcje"
