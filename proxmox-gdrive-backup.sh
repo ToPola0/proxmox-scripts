@@ -81,6 +81,14 @@ function configure_gdrive() {
     dpkg -l | grep rclone || echo "rclone nie jest zainstalowany wg dpkg"
     echo "[DEBUG] apt-cache policy rclone:"
     apt-cache policy rclone
+    echo "[DEBUG] uname -a:"
+    uname -a
+    echo "[DEBUG] ldd --version:"
+    ldd --version
+    echo "[DEBUG] file /usr/bin/rclone:"
+    file /usr/bin/rclone 2>&1 || echo "Brak /usr/bin/rclone"
+    echo "[DEBUG] file /usr/local/bin/rclone:"
+    file /usr/local/bin/rclone 2>&1 || echo "Brak /usr/local/bin/rclone"
     echo "================================"
 
     if ! command -v rclone &>/dev/null; then
