@@ -131,5 +131,4 @@ function menu() {
 }
 
 check_root
-install_rclone
 menu
