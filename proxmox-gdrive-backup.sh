@@ -64,22 +64,35 @@ function configure_gdrive() {
     echo "  n (nowy remote), nazwa: gdrive, typ: drive, domyślne opcje"
     echo "  Otwórz link w przeglądarce, zaloguj się, wklej kod do terminala"
     read -p "Naciśnij Enter, aby rozpocząć konfigurację..."
+
+    echo "[DEBUG] PATH: $PATH"
+    echo "[DEBUG] whoami: $(whoami)"
+    echo "[DEBUG] env:"
+    env | grep -E 'PATH|USER|SHELL'
+    echo "[DEBUG] which rclone: $(which rclone 2>&1)"
+    echo "[DEBUG] ls -l /usr/bin/rclone:"
+    ls -l /usr/bin/rclone 2>&1 || echo "Brak /usr/bin/rclone"
+    echo "[DEBUG] ls -l /usr/local/bin/rclone:"
+    ls -l /usr/local/bin/rclone 2>&1 || echo "Brak /usr/local/bin/rclone"
+
     # Spróbuj uruchomić rclone bezpośrednio z typowych lokalizacji
     if ! command -v rclone &>/dev/null; then
+        echo "[DEBUG] Próba uruchomienia /usr/bin/rclone..."
         if [ -x /usr/bin/rclone ]; then
             /usr/bin/rclone version
             /usr/bin/rclone config
             return
-        elif [ -x /usr/local/bin/rclone ]; then
+        fi
+        echo "[DEBUG] Próba uruchomienia /usr/local/bin/rclone..."
+        if [ -x /usr/local/bin/rclone ]; then
             /usr/local/bin/rclone version
             /usr/local/bin/rclone config
             return
-        else
-            echo "[!] rclone nadal nie jest dostępny po instalacji. Spróbuj uruchomić ręcznie:"
-            echo "    apt update && apt install -y rclone"
-            echo "oraz sprawdź czy /usr/bin/rclone istnieje i jest wykonywalny."
-            exit 3
         fi
+        echo "[!] rclone nadal nie jest dostępny po instalacji. Spróbuj uruchomić ręcznie:"
+        echo "    apt update && apt install -y rclone"
+        echo "oraz sprawdź czy /usr/bin/rclone istnieje i jest wykonywalny."
+        exit 3
     fi
     which rclone
     rclone version
