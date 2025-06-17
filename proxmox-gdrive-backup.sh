@@ -17,13 +17,26 @@ function check_root() {
 
 function install_rclone() {
     if ! command -v rclone &>/dev/null; then
-        echo "[*] Instaluję rclone..."
-        apt update && apt install -y rclone
-        echo "[+] Zainstalowano rclone."
+        echo "[*] Instaluję rclone przez apt..."
+        apt update && apt install -y rclone || INSTALL_FAIL=1
+        if ! command -v rclone &>/dev/null; then
+            echo "[!] Instalacja przez apt nie powiodła się. Próbuję pobrać binarkę rclone..."
+            curl -Of https://downloads.rclone.org/rclone-current-linux-amd64.deb
+            dpkg -i rclone-current-linux-amd64.deb || true
+            rm -f rclone-current-linux-amd64.deb
+        fi
+        if ! command -v rclone &>/dev/null && [ -x /usr/bin/rclone ]; then
+            ln -sf /usr/bin/rclone /usr/local/bin/rclone
+        fi
         if ! command -v rclone &>/dev/null; then
             echo "[!] Instalacja rclone nie powiodła się lub rclone nie jest w PATH!"
+            echo "[i] PATH: $PATH"
+            echo "[i] Dostępne pliki rclone:"
+            ls -l /usr/bin/rclone 2>/dev/null || echo "Brak /usr/bin/rclone"
+            ls -l /usr/local/bin/rclone 2>/dev/null || echo "Brak /usr/local/bin/rclone"
             exit 2
         fi
+        echo "[+] Zainstalowano rclone."
     else
         echo "[=] rclone już zainstalowany."
     fi
@@ -51,18 +64,17 @@ function configure_gdrive() {
     echo "  n (nowy remote), nazwa: gdrive, typ: drive, domyślne opcje"
     echo "  Otwórz link w przeglądarce, zaloguj się, wklej kod do terminala"
     read -p "Naciśnij Enter, aby rozpocząć konfigurację..."
+    if ! command -v rclone &>/dev/null && [ -x /usr/bin/rclone ]; then
+        export PATH="/usr/bin:$PATH"
+    fi
     if ! command -v rclone &>/dev/null; then
         echo "[!] rclone nadal nie jest dostępny po instalacji. Spróbuj uruchomić ręcznie:"
         echo "    apt update && apt install -y rclone"
         echo "oraz sprawdź czy /usr/bin/rclone istnieje i jest wykonywalny."
         exit 3
     fi
-    echo "[i] PATH: $PATH"
-    echo "[i] Dostępne pliki rclone:"
-    ls -l /usr/bin/rclone 2>/dev/null || echo "Brak /usr/bin/rclone"
-    ls -l /usr/local/bin/rclone 2>/dev/null || echo "Brak /usr/local/bin/rclone"
-    which rclone || echo "Nie znaleziono rclone w PATH"
-    rclone version || echo "Nie można uruchomić rclone"
+    which rclone
+    rclone version
     rclone config
 }
 
