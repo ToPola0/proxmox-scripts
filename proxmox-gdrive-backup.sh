@@ -51,6 +51,7 @@ function configure_gdrive() {
 }
 
 function mount_gdrive() {
+    install_rclone
     echo "[*] Montuję Google Drive w $MOUNT_POINT..."
     mkdir -p "$MOUNT_POINT"
     fusermount -u "$MOUNT_POINT" 2>/dev/null || true
@@ -59,6 +60,7 @@ function mount_gdrive() {
 }
 
 function create_service() {
+    install_rclone
     echo "[*] Tworzę usługę systemd..."
     cat <<EOF > "$SERVICE_FILE"
 [Unit]
