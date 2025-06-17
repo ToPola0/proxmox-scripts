@@ -64,14 +64,22 @@ function configure_gdrive() {
     echo "  n (nowy remote), nazwa: gdrive, typ: drive, domyślne opcje"
     echo "  Otwórz link w przeglądarce, zaloguj się, wklej kod do terminala"
     read -p "Naciśnij Enter, aby rozpocząć konfigurację..."
-    if ! command -v rclone &>/dev/null && [ -x /usr/bin/rclone ]; then
-        export PATH="/usr/bin:$PATH"
-    fi
+    # Spróbuj uruchomić rclone bezpośrednio z typowych lokalizacji
     if ! command -v rclone &>/dev/null; then
-        echo "[!] rclone nadal nie jest dostępny po instalacji. Spróbuj uruchomić ręcznie:"
-        echo "    apt update && apt install -y rclone"
-        echo "oraz sprawdź czy /usr/bin/rclone istnieje i jest wykonywalny."
-        exit 3
+        if [ -x /usr/bin/rclone ]; then
+            /usr/bin/rclone version
+            /usr/bin/rclone config
+            return
+        elif [ -x /usr/local/bin/rclone ]; then
+            /usr/local/bin/rclone version
+            /usr/local/bin/rclone config
+            return
+        else
+            echo "[!] rclone nadal nie jest dostępny po instalacji. Spróbuj uruchomić ręcznie:"
+            echo "    apt update && apt install -y rclone"
+            echo "oraz sprawdź czy /usr/bin/rclone istnieje i jest wykonywalny."
+            exit 3
+        fi
     fi
     which rclone
     rclone version
