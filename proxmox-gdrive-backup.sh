@@ -51,6 +51,10 @@ function configure_gdrive() {
     echo "  n (nowy remote), nazwa: gdrive, typ: drive, domyślne opcje"
     echo "  Otwórz link w przeglądarce, zaloguj się, wklej kod do terminala"
     read -p "Naciśnij Enter, aby rozpocząć konfigurację..."
+    if ! command -v rclone &>/dev/null; then
+        echo "[!] rclone nadal nie jest dostępny po instalacji. Sprawdź logi instalacji lub PATH."
+        exit 3
+    fi
     rclone config
 }
 
