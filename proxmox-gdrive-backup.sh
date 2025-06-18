@@ -25,8 +25,8 @@ echo "=== Tworzenie punktu montowania ==="
 mkdir -p /mnt/gdrive
 
 echo "=== Testowe montowanie Google Drive ==="
-# Sprawdź, czy /mnt/gdrive jest już zamontowany
-if mountpoint -q /mnt/gdrive; then
+# Sprawdź, czy /mnt/gdrive jest już zamontowany przez FUSE/rclone
+if mountpoint -q /mnt/gdrive || grep -q '/mnt/gdrive' /proc/mounts; then
     echo "Katalog /mnt/gdrive jest już zamontowany. Pomijam testowe montowanie."
 else
     rclone mount gdrive:proxmox-backup /mnt/gdrive --daemon --allow-other
