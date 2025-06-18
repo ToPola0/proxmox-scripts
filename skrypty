@@ -6,4 +6,41 @@ wget https://raw.githubusercontent.com/ToPola0/proxmox-scripts/main/proxmox-gdri
 chmod +x proxmox-gdrive-backup.sh
 ./proxmox-gdrive-backup.sh
 
-
+Przykładowy plik README.md
+Poniżej znajduje się przykładowy opis, jaki można umieścić w pliku README.md repozytorium (w języku polskim):
+Wymagania: Debian 12 (Bookworm) z Proxmox VE 8 (tryb standalone), zainstalowane rclone oraz konto Google z uprawnieniami do Dysku Google. W środowisku bez przeglądarki należy skonfigurować rclone w trybie headless (np. użyć rclone authorize na innej maszynie)
+rclone.org
+.
+Instalacja: Sklonuj repozytorium i uruchom skrypt instalacyjny jako root:
+bash
+Kopiuj
+Edytuj
+git clone <URL_REPO> && cd <KATALOG>
+sudo bash install_gdrive.sh
+Podczas działania skryptu postępuj zgodnie z instrukcjami (należy skonfigurować rclone config – nadaj remote nazwę np. gdrive). Skrypt automatycznie doda i uruchomi usługę systemd gdrive-mount, która montuje Dysk Google po każdym starcie systemu.
+Dodawanie storage w Proxmox: Po pomyślnej instalacji w pliku /etc/pve/storage.cfg powinien pojawić się wpis typu dir: gdrive-backup wskazujący na /mnt/gdrive. Jeśli tak się nie stało, można ręcznie dodać nowe storage przez GUI Proxmox (wybierając typ Directory, ścieżkę /mnt/gdrive oraz zaznaczając Content = Backup). Przykładowy wpis to:
+bash
+Kopiuj
+Edytuj
+dir: gdrive-backup
+    path /mnt/gdrive
+    content backup
+(format oparty na dokumentacji Proxmox
+pve.proxmox.com
+).
+Uruchamianie i weryfikacja: Sprawdź status montowania poleceniem:
+bash
+Kopiuj
+Edytuj
+systemctl status gdrive-mount
+Pliki backupu będą zapisywane domyślnie w katalogu /mnt/gdrive/dump.
+Troubleshooting: Jeśli montowanie nie działa, upewnij się, że moduł FUSE jest zainstalowany (sudo apt install fuse3) i że w pliku /etc/fuse.conf linia user_allow_other jest odkomentowana (usuń znak #)
+gist.github.com
+. Pozwala to na użycie opcji --allow-other. W razie problemów sprawdź logi systemd (journalctl -u gdrive-mount) oraz upewnij się, że w ~/.config/rclone/rclone.conf znajdują się poprawne tokeny i identyfikatory klienta Google.
+Podsumowanie: Dzięki powyższemu skryptowi i instrukcji README użytkownik może szybko zintegrować Google Drive z Proxmox VE, uzyskując przestrzeń na kopie zapasowe. Skrypt zajmuje się instalacją rclone, konfiguracją połączenia i utworzeniem odpowiednich usług i wpisów konfiguracyjnych w Proxmox VE. Źródła: Wskazane praktyki i przykłady bazują na dokumentacji rclone
+rclone.org
+rclone.org
+ oraz przewodnikach i dyskusjach dotyczących montowania Google Drive w Proxmoxie
+gist.github.com
+pve.proxmox.com
+, które stanowią podstawę dla implementowanych rozwiązań.
