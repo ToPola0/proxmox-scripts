@@ -76,6 +76,31 @@ dir: gdrive-backup
 EOC
 fi
 
+# Dodanie storage do Proxmoxa (wersja z parametrami: maxfiles, nodes, enable)
+STORAGE_NAME="gdrive"
+STORAGE_PATH="/mnt/gdrive"
+NODE_NAME=$(hostname)
+STORAGE_CFG="/etc/pve/storage.cfg"
+
+# Sprawdź, czy storage już istnieje (nowy format)
+if grep -Eq "^\s*dir\s+$STORAGE_NAME" "$STORAGE_CFG"; then
+    echo "Storage '$STORAGE_NAME' już istnieje w $STORAGE_CFG."
+else
+    echo "Dodaję storage '$STORAGE_NAME' do $STORAGE_CFG..."
+
+    cat <<EOF >> "$STORAGE_CFG"
+
+dir $STORAGE_NAME
+    path $STORAGE_PATH
+    content backup
+    maxfiles 3
+    nodes $NODE_NAME
+    enable 1
+EOF
+
+    echo "Storage '$STORAGE_NAME' został dodany."
+fi
+
 echo "=== Ustawienia FUSE ==="
 # Odkomentuj user_allow_other w /etc/fuse.conf
 if grep -q "^#user_allow_other" /etc/fuse.conf; then
