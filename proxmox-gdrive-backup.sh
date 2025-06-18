@@ -38,10 +38,11 @@ fi
 
 # ZAWSZE odmontuj przed testowym montowaniem (upewnij się, że punkt jest czysty)
 fusermount -uz /mnt/gdrive 2>/dev/null || true
+sleep 1
 
-# Sprawdź, czy /mnt/gdrive jest już zamontowany przez FUSE/rclone (i czy jest aktywna sesja rclone/fuse)
+# Po odmontowaniu sprawdź ponownie, czy coś nie blokuje katalogu
 if mountpoint -q /mnt/gdrive || grep -q '/mnt/gdrive' /proc/mounts || lsof +D /mnt/gdrive | grep -q rclone; then
-    echo "Katalog /mnt/gdrive jest już zamontowany lub używany. Pomijam testowe montowanie."
+    echo "Katalog /mnt/gdrive nadal jest zamontowany lub używany. Pomijam testowe montowanie."
 else
     rclone mount gdrive:proxmox-backup /mnt/gdrive --daemon --allow-other
     sleep 5
