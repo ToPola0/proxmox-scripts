@@ -8,6 +8,10 @@ wget https://raw.githubusercontent.com/ToPola0/proxmox-scripts/main/proxmox-gdri
 chmod +x proxmox-gdrive-backup.sh
 ./proxmox-gdrive-backup.sh
 
+fusermount -uz /mnt/gdrive
+
+
+
 Przykładowy plik README.md
 Poniżej znajduje się przykładowy opis, jaki można umieścić w pliku README.md repozytorium (w języku polskim):
 Wymagania: Debian 12 (Bookworm) z Proxmox VE 8 (tryb standalone), zainstalowane rclone oraz konto Google z uprawnieniami do Dysku Google. W środowisku bez przeglądarki należy skonfigurować rclone w trybie headless (np. użyć rclone authorize na innej maszynie)
