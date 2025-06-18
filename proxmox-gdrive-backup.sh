@@ -67,12 +67,17 @@ function configure_gdrive() {
 
     set +e
     echo "========== DEBUG INFO =========="
-    echo "[DEBUG] PATH: $PATH"
     echo "[DEBUG] whoami: $(whoami)"
+    echo "[DEBUG] pwd: $(pwd)"
+    echo "[DEBUG] PATH: $PATH"
+    echo "[DEBUG] SHELL: $SHELL"
+    echo "[DEBUG] HOME: $HOME"
     echo "[DEBUG] env:"
-    env | grep -E 'PATH|USER|SHELL'
+    env
     echo "[DEBUG] which rclone: $(which rclone 2>&1)"
     echo "[DEBUG] type rclone: $(type rclone 2>&1)"
+    echo "[DEBUG] hash rclone:"
+    hash rclone 2>&1
     echo "[DEBUG] ls -l /usr/bin/rclone:"
     ls -l /usr/bin/rclone 2>&1 || echo "Brak /usr/bin/rclone"
     echo "[DEBUG] ls -l /usr/local/bin/rclone:"
@@ -89,6 +94,18 @@ function configure_gdrive() {
     file /usr/bin/rclone 2>&1 || echo "Brak /usr/bin/rclone"
     echo "[DEBUG] file /usr/local/bin/rclone:"
     file /usr/local/bin/rclone 2>&1 || echo "Brak /usr/local/bin/rclone"
+    echo "[DEBUG] cat /etc/os-release:"
+    cat /etc/os-release 2>&1
+    echo "[DEBUG] id:"
+    id
+    echo "[DEBUG] ls -ld / /usr /usr/bin /usr/local /usr/local/bin"
+    ls -ld / /usr /usr/bin /usr/local /usr/local/bin
+    echo "[DEBUG] mount:"
+    mount
+    echo "[DEBUG] df -h:"
+    df -h
+    echo "[DEBUG] ps aux | grep rclone:"
+    ps aux | grep rclone
     echo "================================"
 
     if ! command -v rclone &>/dev/null; then
