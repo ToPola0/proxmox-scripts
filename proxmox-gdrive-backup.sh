@@ -65,7 +65,6 @@ function configure_gdrive() {
     echo "  Otwórz link w przeglądarce, zaloguj się, wklej kod do terminala"
     read -p "Naciśnij Enter, aby rozpocząć konfigurację..."
 
-    # Wymuś wyświetlenie debug info nawet jeśli rclone nie istnieje
     set +e
     {
         echo "========== DEBUG INFO =========="
@@ -111,26 +110,10 @@ function configure_gdrive() {
         echo "================================"
     } >&2
 
+    # Wymuś zatrzymanie skryptu jeśli rclone nie istnieje
     if ! command -v rclone &>/dev/null; then
-        echo "[DEBUG] Próba uruchomienia /usr/bin/rclone..." >&2
-        if [ -x /usr/bin/rclone ]; then
-            /usr/bin/rclone version || echo "[DEBUG] /usr/bin/rclone version nie działa" >&2
-            /usr/bin/rclone config || echo "[DEBUG] /usr/bin/rclone config nie działa" >&2
-            set -e
-            return
-        fi
-        echo "[DEBUG] Próba uruchomienia /usr/local/bin/rclone..." >&2
-        if [ -x /usr/local/bin/rclone ]; then
-            /usr/local/bin/rclone version || echo "[DEBUG] /usr/local/bin/rclone version nie działa" >&2
-            /usr/local/bin/rclone config || echo "[DEBUG] /usr/local/bin/rclone config nie działa" >&2
-            set -e
-            return
-        fi
-        echo "[!] rclone nadal nie jest dostępny po instalacji. Spróbuj uruchomić ręcznie:" >&2
-        echo "    apt update && apt install -y rclone" >&2
-        echo "oraz sprawdź czy /usr/bin/rclone istnieje i jest wykonywalny." >&2
-        set -e
-        exit 3
+        echo "[!] rclone: command not found" >&2
+        exit 127
     fi
     which rclone
     rclone version || echo "[DEBUG] rclone version nie działa" >&2
