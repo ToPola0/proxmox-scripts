@@ -34,6 +34,8 @@ echo "=== Testowe montowanie Google Drive ==="
 # Sprawdź, czy /mnt/gdrive jest już zamontowany przez FUSE/rclone (i czy jest aktywna sesja rclone/fuse)
 if mountpoint -q /mnt/gdrive || grep -q '/mnt/gdrive' /proc/mounts || lsof +D /mnt/gdrive | grep -q rclone; then
     echo "Katalog /mnt/gdrive jest już zamontowany lub używany. Pomijam testowe montowanie."
+    # Odmontuj jeśli jest zamontowany (opcjonalnie, wymuszenie czystości przed systemd)
+    fusermount -uz /mnt/gdrive 2>/dev/null || true
 else
     rclone mount gdrive:proxmox-backup /mnt/gdrive --daemon --allow-other
     sleep 5
