@@ -65,73 +65,76 @@ function configure_gdrive() {
     echo "  Otwórz link w przeglądarce, zaloguj się, wklej kod do terminala"
     read -p "Naciśnij Enter, aby rozpocząć konfigurację..."
 
+    # Wymuś wyświetlenie debug info nawet jeśli rclone nie istnieje
     set +e
-    echo "========== DEBUG INFO =========="
-    echo "[DEBUG] whoami: $(whoami)"
-    echo "[DEBUG] pwd: $(pwd)"
-    echo "[DEBUG] PATH: $PATH"
-    echo "[DEBUG] SHELL: $SHELL"
-    echo "[DEBUG] HOME: $HOME"
-    echo "[DEBUG] env:"
-    env
-    echo "[DEBUG] which rclone: $(which rclone 2>&1)"
-    echo "[DEBUG] type rclone: $(type rclone 2>&1)"
-    echo "[DEBUG] hash rclone:"
-    hash rclone 2>&1
-    echo "[DEBUG] ls -l /usr/bin/rclone:"
-    ls -l /usr/bin/rclone 2>&1 || echo "Brak /usr/bin/rclone"
-    echo "[DEBUG] ls -l /usr/local/bin/rclone:"
-    ls -l /usr/local/bin/rclone 2>&1 || echo "Brak /usr/local/bin/rclone"
-    echo "[DEBUG] dpkg -l | grep rclone:"
-    dpkg -l | grep rclone || echo "rclone nie jest zainstalowany wg dpkg"
-    echo "[DEBUG] apt-cache policy rclone:"
-    apt-cache policy rclone
-    echo "[DEBUG] uname -a:"
-    uname -a
-    echo "[DEBUG] ldd --version:"
-    ldd --version
-    echo "[DEBUG] file /usr/bin/rclone:"
-    file /usr/bin/rclone 2>&1 || echo "Brak /usr/bin/rclone"
-    echo "[DEBUG] file /usr/local/bin/rclone:"
-    file /usr/local/bin/rclone 2>&1 || echo "Brak /usr/local/bin/rclone"
-    echo "[DEBUG] cat /etc/os-release:"
-    cat /etc/os-release 2>&1
-    echo "[DEBUG] id:"
-    id
-    echo "[DEBUG] ls -ld / /usr /usr/bin /usr/local /usr/local/bin"
-    ls -ld / /usr /usr/bin /usr/local /usr/local/bin
-    echo "[DEBUG] mount:"
-    mount
-    echo "[DEBUG] df -h:"
-    df -h
-    echo "[DEBUG] ps aux | grep rclone:"
-    ps aux | grep rclone
-    echo "================================"
+    {
+        echo "========== DEBUG INFO =========="
+        echo "[DEBUG] whoami: $(whoami)"
+        echo "[DEBUG] pwd: $(pwd)"
+        echo "[DEBUG] PATH: $PATH"
+        echo "[DEBUG] SHELL: $SHELL"
+        echo "[DEBUG] HOME: $HOME"
+        echo "[DEBUG] env:"
+        env
+        echo "[DEBUG] which rclone: $(which rclone 2>&1)"
+        echo "[DEBUG] type rclone: $(type rclone 2>&1)"
+        echo "[DEBUG] hash rclone:"
+        hash rclone 2>&1
+        echo "[DEBUG] ls -l /usr/bin/rclone:"
+        ls -l /usr/bin/rclone 2>&1 || echo "Brak /usr/bin/rclone"
+        echo "[DEBUG] ls -l /usr/local/bin/rclone:"
+        ls -l /usr/local/bin/rclone 2>&1 || echo "Brak /usr/local/bin/rclone"
+        echo "[DEBUG] dpkg -l | grep rclone:"
+        dpkg -l | grep rclone || echo "rclone nie jest zainstalowany wg dpkg"
+        echo "[DEBUG] apt-cache policy rclone:"
+        apt-cache policy rclone
+        echo "[DEBUG] uname -a:"
+        uname -a
+        echo "[DEBUG] ldd --version:"
+        ldd --version
+        echo "[DEBUG] file /usr/bin/rclone:"
+        file /usr/bin/rclone 2>&1 || echo "Brak /usr/bin/rclone"
+        echo "[DEBUG] file /usr/local/bin/rclone:"
+        file /usr/local/bin/rclone 2>&1 || echo "Brak /usr/local/bin/rclone"
+        echo "[DEBUG] cat /etc/os-release:"
+        cat /etc/os-release 2>&1
+        echo "[DEBUG] id:"
+        id
+        echo "[DEBUG] ls -ld / /usr /usr/bin /usr/local /usr/local/bin"
+        ls -ld / /usr /usr/bin /usr/local /usr/local/bin
+        echo "[DEBUG] mount:"
+        mount
+        echo "[DEBUG] df -h:"
+        df -h
+        echo "[DEBUG] ps aux | grep rclone:"
+        ps aux | grep rclone
+        echo "================================"
+    } >&2
 
     if ! command -v rclone &>/dev/null; then
-        echo "[DEBUG] Próba uruchomienia /usr/bin/rclone..."
+        echo "[DEBUG] Próba uruchomienia /usr/bin/rclone..." >&2
         if [ -x /usr/bin/rclone ]; then
-            /usr/bin/rclone version || echo "[DEBUG] /usr/bin/rclone version nie działa"
-            /usr/bin/rclone config || echo "[DEBUG] /usr/bin/rclone config nie działa"
+            /usr/bin/rclone version || echo "[DEBUG] /usr/bin/rclone version nie działa" >&2
+            /usr/bin/rclone config || echo "[DEBUG] /usr/bin/rclone config nie działa" >&2
             set -e
             return
         fi
-        echo "[DEBUG] Próba uruchomienia /usr/local/bin/rclone..."
+        echo "[DEBUG] Próba uruchomienia /usr/local/bin/rclone..." >&2
         if [ -x /usr/local/bin/rclone ]; then
-            /usr/local/bin/rclone version || echo "[DEBUG] /usr/local/bin/rclone version nie działa"
-            /usr/local/bin/rclone config || echo "[DEBUG] /usr/local/bin/rclone config nie działa"
+            /usr/local/bin/rclone version || echo "[DEBUG] /usr/local/bin/rclone version nie działa" >&2
+            /usr/local/bin/rclone config || echo "[DEBUG] /usr/local/bin/rclone config nie działa" >&2
             set -e
             return
         fi
-        echo "[!] rclone nadal nie jest dostępny po instalacji. Spróbuj uruchomić ręcznie:"
-        echo "    apt update && apt install -y rclone"
-        echo "oraz sprawdź czy /usr/bin/rclone istnieje i jest wykonywalny."
+        echo "[!] rclone nadal nie jest dostępny po instalacji. Spróbuj uruchomić ręcznie:" >&2
+        echo "    apt update && apt install -y rclone" >&2
+        echo "oraz sprawdź czy /usr/bin/rclone istnieje i jest wykonywalny." >&2
         set -e
         exit 3
     fi
     which rclone
-    rclone version || echo "[DEBUG] rclone version nie działa"
-    rclone config || echo "[DEBUG] rclone config nie działa"
+    rclone version || echo "[DEBUG] rclone version nie działa" >&2
+    rclone config || echo "[DEBUG] rclone config nie działa" >&2
     set -e
 }
 
