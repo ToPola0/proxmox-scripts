@@ -25,13 +25,17 @@ echo "=== Tworzenie punktu montowania ==="
 mkdir -p /mnt/gdrive
 
 echo "=== Testowe montowanie Google Drive ==="
-# Montuj na chwilę i sprawdź
-rclone mount gdrive:proxmox-backup /mnt/gdrive --daemon --allow-other
-sleep 5
-echo "Zawartość /mnt/gdrive:"
-ls /mnt/gdrive || { echo "Błąd: nie udało się uzyskać dostępu do /mnt/gdrive."; exit 1; }
-# Odmontuj po teście
-fusermount -uz /mnt/gdrive
+# Sprawdź, czy /mnt/gdrive jest już zamontowany
+if mountpoint -q /mnt/gdrive; then
+    echo "Katalog /mnt/gdrive jest już zamontowany. Pomijam testowe montowanie."
+else
+    rclone mount gdrive:proxmox-backup /mnt/gdrive --daemon --allow-other
+    sleep 5
+    echo "Zawartość /mnt/gdrive:"
+    ls /mnt/gdrive || { echo "Błąd: nie udało się uzyskać dostępu do /mnt/gdrive."; exit 1; }
+    # Odmontuj po teście
+    fusermount -uz /mnt/gdrive
+fi
 
 echo "=== Konfiguracja systemd ==="
 # Plik usługi systemd
