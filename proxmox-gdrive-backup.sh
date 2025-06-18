@@ -73,42 +73,31 @@ systemctl enable gdrive-mount.service
 systemctl start gdrive-mount.service
 
 echo "=== Konfiguracja Proxmox storage ==="
-# Backup pliku storage.cfg
-if [ -f /etc/pve/storage.cfg ]; then
-    cp /etc/pve/storage.cfg "/etc/pve/storage.cfg.backup_$(date +%F_%T)"
-fi
-# Dodaj wpis, jeśli nie istnieje
-if ! grep -q "^dir: gdrive-backup" /etc/pve/storage.cfg; then
-    cat <<EOC >> /etc/pve/storage.cfg
-dir: gdrive-backup
-    path /mnt/gdrive
-    content backup
-EOC
-fi
-
-# Dodanie storage do Proxmoxa (wersja z parametrami: maxfiles, nodes, enable)
-STORAGE_NAME="gdrive"
+STORAGE_NAME="gdrive-backup"
 STORAGE_PATH="/mnt/gdrive"
 NODE_NAME=$(hostname)
 STORAGE_CFG="/etc/pve/storage.cfg"
 
-# Sprawdź, czy storage już istnieje (nowy format)
-if grep -Eq "^\s*dir\s+$STORAGE_NAME" "$STORAGE_CFG"; then
+# Backup storage.cfg
+if [ -f "$STORAGE_CFG" ]; then
+    cp "$STORAGE_CFG" "$STORAGE_CFG.backup_$(date +%F_%T)"
+fi
+
+# Sprawdź, czy storage już istnieje
+if grep -q "^dir: $STORAGE_NAME" "$STORAGE_CFG"; then
     echo "Storage '$STORAGE_NAME' już istnieje w $STORAGE_CFG."
 else
     echo "Dodaję storage '$STORAGE_NAME' do $STORAGE_CFG..."
-
     cat <<EOF >> "$STORAGE_CFG"
 
-dir $STORAGE_NAME
+dir: $STORAGE_NAME
     path $STORAGE_PATH
     content backup
     maxfiles 3
     nodes $NODE_NAME
     enable 1
 EOF
-
-    echo "Storage '$STORAGE_NAME' został dodany."
+    echo "Storage '$STORAGE_NAME' został dodany i będzie widoczny w GUI Proxmoxa."
 fi
 
 # --- Aktualizacja wpisu storage w storage.cfg ---
