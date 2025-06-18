@@ -1,114 +1,48 @@
-#!/bin/bash
-set -euo pipefail
 
-# Sprawdź, czy uruchomiono jako root
-if [ "$(id -u)" -ne 0 ]; then
-    echo "Błąd: skrypt musi być uruchomiony jako root." >&2
-    exit 1
-fi
+wget -O - https://raw.githubusercontent.com/ToPola0/proxmox-scripts/main/proxmox-dhcp.sh | bash
 
-echo "=== Instalacja rclone ==="
-# Instalacja rclone z repozytorium lub oficjalnego skryptu
-if ! command -v rclone >/dev/null 2>&1; then
-    apt-get update -qq
-    if ! apt-get install -y rclone; then
-        echo "Instalacja z repozytorium nie powiodła się. Pobieram oficjalny skrypt instalacyjny rclone..."
-        curl -s https://rclone.org/install.sh | bash
-    fi
-fi
 
-echo "=== Konfiguracja rclone ==="
-echo "Uruchom kreator rclone config i skonfiguruj Google Drive (podaj nazwę remote, np. 'gdrive')."
-rclone config
 
-echo "=== Tworzenie punktu montowania ==="
-mkdir -p /mnt/gdrive
 
-echo "=== Testowe montowanie Google Drive ==="
-# Sprawdź, czy /mnt/gdrive jest już zamontowany
-if mountpoint -q /mnt/gdrive; then
-    echo "Katalog /mnt/gdrive jest już zamontowany. Pomijam testowe montowanie."
-else
-    rclone mount gdrive:proxmox-backup /mnt/gdrive --daemon --allow-other
-    sleep 5
-    echo "Zawartość /mnt/gdrive:"
-    ls /mnt/gdrive || { echo "Błąd: nie udało się uzyskać dostępu do /mnt/gdrive."; exit 1; }
-    # Odmontuj po teście
-    fusermount -uz /mnt/gdrive
-fi
+wget https://raw.githubusercontent.com/ToPola0/proxmox-scripts/main/proxmox-gdrive-backup.sh
+chmod +x proxmox-gdrive-backup.sh
+./proxmox-gdrive-backup.sh
 
-echo "=== Konfiguracja systemd ==="
-# Plik usługi systemd
-cat <<EOF > /etc/systemd/system/gdrive-mount.service
-[Unit]
-Description=Mount Google Drive at /mnt/gdrive
-Wants=network-online.target
-After=network-online.target
+Przykładowy plik README.md
+Poniżej znajduje się przykładowy opis, jaki można umieścić w pliku README.md repozytorium (w języku polskim):
+Wymagania: Debian 12 (Bookworm) z Proxmox VE 8 (tryb standalone), zainstalowane rclone oraz konto Google z uprawnieniami do Dysku Google. W środowisku bez przeglądarki należy skonfigurować rclone w trybie headless (np. użyć rclone authorize na innej maszynie)
+rclone.org
+.
+Instalacja: Sklonuj repozytorium i uruchom skrypt instalacyjny jako root:
 
-[Service]
-Type=notify
-User=root
-Environment=RCLONE_CONFIG=/root/.config/rclone/rclone.conf
-ExecStart=/usr/bin/rclone mount gdrive:proxmox-backup /mnt/gdrive \\
-    --allow-other \\
-    --dir-cache-time 12h \\
-    --vfs-cache-mode minimal \\
-    --vfs-cache-max-size 100M
-ExecStop=/bin/fusermount -uz /mnt/gdrive
-Restart=on-failure
+bash
 
-[Install]
-WantedBy=multi-user.target
-EOF
+git clone <URL_REPO> && cd <KATALOG>
+sudo bash install_gdrive.sh
+Podczas działania skryptu postępuj zgodnie z instrukcjami (należy skonfigurować rclone config – nadaj remote nazwę np. gdrive). Skrypt automatycznie doda i uruchomi usługę systemd gdrive-mount, która montuje Dysk Google po każdym starcie systemu.
+Dodawanie storage w Proxmox: Po pomyślnej instalacji w pliku /etc/pve/storage.cfg powinien pojawić się wpis typu dir: gdrive-backup wskazujący na /mnt/gdrive. Jeśli tak się nie stało, można ręcznie dodać nowe storage przez GUI Proxmox (wybierając typ Directory, ścieżkę /mnt/gdrive oraz zaznaczając Content = Backup). Przykładowy wpis to:
 
-# Włącz i uruchom usługę
-systemctl daemon-reload
-systemctl enable gdrive-mount.service
-systemctl start gdrive-mount.service
+bash
 
-echo "=== Konfiguracja Proxmox storage ==="
-# Backup pliku storage.cfg
-if [ -f /etc/pve/storage.cfg ]; then
-    cp /etc/pve/storage.cfg "/etc/pve/storage.cfg.backup_$(date +%F_%T)"
-fi
-# Dodaj wpis, jeśli nie istnieje
-if ! grep -q "^dir: gdrive-backup" /etc/pve/storage.cfg; then
-    cat <<EOC >> /etc/pve/storage.cfg
 dir: gdrive-backup
     path /mnt/gdrive
     content backup
-EOC
-fi
+(format oparty na dokumentacji Proxmox
+pve.proxmox.com
+).
+Uruchamianie i weryfikacja: Sprawdź status montowania poleceniem:
 
-# Dodanie storage do Proxmoxa (wersja z parametrami: maxfiles, nodes, enable)
-STORAGE_NAME="gdrive"
-STORAGE_PATH="/mnt/gdrive"
-NODE_NAME=$(hostname)
-STORAGE_CFG="/etc/pve/storage.cfg"
+bash
 
-# Sprawdź, czy storage już istnieje (nowy format)
-if grep -Eq "^\s*dir\s+$STORAGE_NAME" "$STORAGE_CFG"; then
-    echo "Storage '$STORAGE_NAME' już istnieje w $STORAGE_CFG."
-else
-    echo "Dodaję storage '$STORAGE_NAME' do $STORAGE_CFG..."
-
-    cat <<EOF >> "$STORAGE_CFG"
-
-dir $STORAGE_NAME
-    path $STORAGE_PATH
-    content backup
-    maxfiles 3
-    nodes $NODE_NAME
-    enable 1
-EOF
-
-    echo "Storage '$STORAGE_NAME' został dodany."
-fi
-
-echo "=== Ustawienia FUSE ==="
-# Odkomentuj user_allow_other w /etc/fuse.conf
-if grep -q "^#user_allow_other" /etc/fuse.conf; then
-    sed -i 's/^#\(user_allow_other\)/\1/' /etc/fuse.conf
-fi
-
-echo "Instalacja zakończona. Usługa gdrive-mount została uruchomiona i zamontowała Google Drive w /mnt/gdrive."
+systemctl status gdrive-mount
+Pliki backupu będą zapisywane domyślnie w katalogu /mnt/gdrive/dump.
+Troubleshooting: Jeśli montowanie nie działa, upewnij się, że moduł FUSE jest zainstalowany (sudo apt install fuse3) i że w pliku /etc/fuse.conf linia user_allow_other jest odkomentowana (usuń znak #)
+gist.github.com
+. Pozwala to na użycie opcji --allow-other. W razie problemów sprawdź logi systemd (journalctl -u gdrive-mount) oraz upewnij się, że w ~/.config/rclone/rclone.conf znajdują się poprawne tokeny i identyfikatory klienta Google.
+Podsumowanie: Dzięki powyższemu skryptowi i instrukcji README użytkownik może szybko zintegrować Google Drive z Proxmox VE, uzyskując przestrzeń na kopie zapasowe. Skrypt zajmuje się instalacją rclone, konfiguracją połączenia i utworzeniem odpowiednich usług i wpisów konfiguracyjnych w Proxmox VE. Źródła: Wskazane praktyki i przykłady bazują na dokumentacji rclone
+rclone.org
+rclone.org
+ oraz przewodnikach i dyskusjach dotyczących montowania Google Drive w Proxmoxie
+gist.github.com
+pve.proxmox.com
+, które stanowią podstawę dla implementowanych rozwiązań.
