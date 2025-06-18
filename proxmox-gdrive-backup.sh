@@ -110,7 +110,6 @@ function configure_gdrive() {
         echo "================================"
     } >&2
 
-    # Wymuś zatrzymanie skryptu jeśli rclone nie istnieje
     if ! command -v rclone &>/dev/null; then
         echo "[!] rclone: command not found" >&2
         exit 127
@@ -139,7 +138,7 @@ Description=Mount Google Drive via Rclone
 After=network-online.target
 
 [Service]
-ExecStart=/usr/bin/rclone mount gdrive:/proxmox-backup $MOUNT_POINT \\
+ExecStart=$(which rclone) mount gdrive:/proxmox-backup $MOUNT_POINT \\
   --allow-other \\
   --dir-cache-time 72h \\
   --poll-interval 15s \\
@@ -165,11 +164,14 @@ function add_to_proxmox_cfg() {
         echo "[=] Storage '$STORAGE_NAME' już istnieje."
     else
         echo "[*] Dodaję storage do Proxmoxa..."
-        echo "\ndir: $STORAGE_NAME
+        cat <<EOF >> "$STORAGE_CFG"
+
+dir: $STORAGE_NAME
     path $MOUNT_POINT
     content backup
     maxfiles 3
-    prune-backups yes" >> "$STORAGE_CFG"
+    prune-backups yes
+EOF
         echo "[+] Dodano storage '$STORAGE_NAME'."
     fi
 }
