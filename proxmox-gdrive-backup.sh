@@ -80,17 +80,16 @@ STORAGE_PATH="/mnt/gdrive"
 NODE_NAME=$(hostname)
 STORAGE_CFG="/etc/pve/storage.cfg"
 
-# Backup storage.cfg
+# Backup
 if [ -f "$STORAGE_CFG" ]; then
     cp "$STORAGE_CFG" "$STORAGE_CFG.backup_$(date +%F_%T)"
 fi
 
-# Sprawdź, czy storage już istnieje
-if grep -q "^dir: $STORAGE_NAME" "$STORAGE_CFG"; then
-    echo "Storage '$STORAGE_NAME' już istnieje w $STORAGE_CFG."
-else
-    echo "Dodaję storage '$STORAGE_NAME' do $STORAGE_CFG..."
-    cat <<EOF >> "$STORAGE_CFG"
+# Usuń stary wpis jeśli istnieje (żeby nie dublować)
+sed -i "/^dir: $STORAGE_NAME/,/^\S/ d" "$STORAGE_CFG"
+
+# Dodaj poprawny wpis
+cat <<EOF >> "$STORAGE_CFG"
 
 dir: $STORAGE_NAME
     path $STORAGE_PATH
@@ -99,47 +98,8 @@ dir: $STORAGE_NAME
     nodes $NODE_NAME
     enable 1
 EOF
-    echo "Storage '$STORAGE_NAME' został dodany i będzie widoczny w GUI Proxmoxa."
-fi
 
-# --- Aktualizacja wpisu storage w storage.cfg ---
-STORAGE_NAME="gdrive-backup"
-STORAGE_PATH="/mnt/gdrive"
-NODE_NAME=$(hostname)
-STORAGE_CFG="/etc/pve/storage.cfg"
-
-# Backup pliku
-cp "$STORAGE_CFG" "${STORAGE_CFG}.backup_$(date +%F_%T)"
-
-if grep -q "^dir: $STORAGE_NAME" "$STORAGE_CFG"; then
-    echo "Wpis $STORAGE_NAME istnieje, aktualizuję opcje..."
-
-    # Usuń istniejące linie maxfiles, nodes i enable w bloku storage
-    sed -i "/^dir: $STORAGE_NAME/,/^dir:/ {//!{/maxfiles\|nodes\|enable/d}}" "$STORAGE_CFG"
-
-    # Dodaj linie po linii 'content backup' w bloku storage
-    sed -i "/^dir: $STORAGE_NAME/{
-        :a
-        n
-        /^content backup/ a\
-    \    maxfiles 3\
-    \    nodes $NODE_NAME\
-    \    enable 1
-    }" "$STORAGE_CFG"
-else
-    echo "Wpis $STORAGE_NAME nie istnieje, dodaję nowy..."
-    cat <<EOF >> "$STORAGE_CFG"
-
-dir: $STORAGE_NAME
-    path $STORAGE_PATH
-    content backup
-    maxfiles 3
-    nodes $NODE_NAME
-    enable 1
-EOF
-fi
-
-echo "Aktualizacja storage.cfg zakończona."
+echo "Storage '$STORAGE_NAME' został dodany z pełną konfiguracją."
 
 echo "=== Ustawienia FUSE ==="
 # Odkomentuj user_allow_other w /etc/fuse.conf
